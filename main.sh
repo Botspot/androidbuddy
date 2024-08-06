@@ -216,6 +216,7 @@ Type=Application
 X-GNOME-Autostart-enabled=true
 Hidden=false
 NoDisplay=false" > ~/.config/autostart/androidbuddy.desktop
+        ps aux | grep -x "/bin/bash $(dirname $0)/autostart.sh" | grep -v grep | awk '{print $2}' | xargs kill 2>/dev/null
         setsid "$(dirname $0)/autostart.sh" &
         yad --width=400 --text="Added the autostart file."$'\n'"From now on, AndroidBuddy will launch when an Android phone is plugged in." --button=OK:0
         kill $(echo "$input" | awk '{print $2}') #kill yad and exit
