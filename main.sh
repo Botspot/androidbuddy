@@ -277,11 +277,7 @@ while read -r input; do
       if [ -f ~/.config/autostart/androidbuddy.desktop ];then
         rm -f ~/.config/autostart/androidbuddy.desktop
         ps aux | grep "/bin/bash $(dirname $0)/autostart.sh" | grep -v grep | awk '{print $2}' | xargs kill
-<<<<<<< HEAD
-        yad --width=400 --text="Removed the autostart file."$'\n'"From now on, AndroidBuddy will no longer launch when an Android phone is plugged in." --button=OK:0
-=======
         yad "${yadflags[@]}" --width=400 --text="Removed the autostart file."$'\n'"From now on, AndroidBuddy will no longer launch when an Android phone is plugged in." --button=OK:0
->>>>>>> 979ba37 (Add logos, menu launcher, gui error handling, adb instructions)
       else
         mkdir -p ~/.config/autostart
         echo "[Desktop Entry]
