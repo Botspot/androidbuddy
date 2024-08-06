@@ -3,7 +3,14 @@
 scrcpyflags=(--legacy-paste --turn-screen-off --stay-awake --power-off-on-close)
 
 error() { #red text and exit 1
-  echo -e "\e[91m$1\e[0m" 1>&2
+  [ ! -z "$1" ] && echo -e "\e[91m$1\e[0m" 1>&2
+  
+  local display_error=yes
+  if [ ! -z $YAD_PID ];then
+    #don't popup the error if the main window was running but the process does not exist (prevents multiple error dialogs)
+    kill $YAD_PID 2>/dev/null || display_error=no
+  fi
+  [ "$display_error" == yes ] && setsid yad "${yadflags[@]}" --text="AndroidBuddy encountered an error <b>:(</b>"$'\n'"$1" --button=OK:0 &
   exit 1
 }
 
@@ -76,10 +83,10 @@ wait_for_reconnect() {
   for i in {1..20} ;do
     if adb shell pm list packages &>/dev/null ;then
       return 0
-      break
     fi
     sleep 0.1
   done
+  return 1
 }
 
 scrcpy_daemon() {
@@ -111,35 +118,96 @@ scrcpy_daemon() {
   done
 }
 
+yadflags=(--center --class=androidbuddy --name=androidbuddy --window-icon=androidbuddy --title="AndroidBuddy")
+
+if [ ! -f ~/.local/share/applications/androidbuddy.desktop ];then
+  if [ -f /usr/share/applications/androidbuddy.desktop ];then
+    sudo_popup rm -f /usr/share/applications/androidbuddy.desktop
+  fi
+  echo "[Desktop Entry]
+Name=AndroidBuddy
+Comment=GUI for Android device recovery and maintainence
+Exec="\""$(dirname $0)/main.sh"\""
+Icon=androidbuddy
+StartupWMClass=androidbuddy
+Terminal=false
+Type=Application
+Hidden=false
+Categories=Utility;" > ~/.local/share/applications/androidbuddy.desktop
+fi
+
+if [ ! -f ~/.local/share/icons/androidbuddy.png ];then
+  mkdir -p ~/.local/share/icons || error "failed to make icons directory!"
+  cp "$(dirname "$0")/logo.png" ~/.local/share/icons/androidbuddy.png || error "failed to copy icon!"
+  update-icon-caches ~/.local/share/icons
+fi
+
+read_true() {
+  [ "$exitcode" == first ] && return 0
+  read "$@"
+  true
+}
 #wait for phone to be plugged in
 exitcode=first
-echo -n "Waiting for phone... "
-while [ $exitcode != 0 ];do
-  [ "$exitcode" != first ] && sleep 5
+yad "${yadflags[@]}" --text="Waiting for phone..." --progress --pulsate --width 400 --no-buttons < <(echo '#';sleep infinity) &
+loaderpid=$!
+trap "kill $loaderpid 2>/dev/null" EXIT
+line=''
+yaderrpid=''
+while read_true -t 5 line ;do
+  echo "received '$line'"
+  
   installed_apks="$(adb shell pm list packages 2>/dev/null)"
   exitcode=$?
-done
-echo Done
+  if [ ! -z "$line" ] && [ "$exitcode" != 0 ];then
+    #phone detected, but adb failed - give it 1 second
+    sleep 1
+    if installed_apks="$(adb shell pm list packages 2>/dev/null)" ;then
+      kill "$loaderpid" 2>/dev/null
+      kill "$yaderrpid" 2>/dev/null
+      break
+    elif [ -z "$yaderrpid" ];then
+      #still failed, adb not enabled, user not yet informed what to do
+      kill "$loaderpid" 2>/dev/null
+      echo 'Android phone detected, but you need to enable USB debugging.
+1. On your phone, go to Settings > "About phone"
+2. Tap "Software information" if you see it
+3. Tap "Build number" several times until developer mode is enabled
+4. Go back to Settings and tap "Developer options", then enable "USB debugging"' | yad "${yadflags[@]}" --text-info --width 500 --height=200 --wrap --fontname="" --no-buttons &
+      yaderrpid=$!
+      trap "kill $yaderrpid 2>/dev/null" EXIT
+    fi
+  elif [ "$exitcode" == 0 ];then
+    kill "$yaderrpid" 2>/dev/null
+    kill "$loaderpid" 2>/dev/null
+    break
+  elif [ ! -f "/proc/$loaderpid/status" ] && [ ! -f "/proc/$yaderrpid/status" ];then
+    echo "exiting, as loader window was closed"
+    exit 0
+  fi
+done < <(udevadm monitor --environment | grep --line-buffered '^ID_SERIAL.*Android')
 
 if ! command -v yad >/dev/null ;then
   sudo_popup apt update
   sudo_popup apt install -y yad || error "yad is required but it failed to install."
 fi
 
-my_pid=$$
-
 gnirehtet_installed="$(grep -xFq "package:com.genymobile.gnirehtet" <<<"$installed_apks" && echo true || echo false)"
-echo "gnirehtet_installed: $gnirehtet_installed"
 
-yad --form --center --no-buttons --title=AndroidBuddy --auto-close \
-  --field='Show/hide screen!!View and control phone screen with scrcpy':FBTN 'echo scrcpy' \
-  --field='Share internet to phone!!Share my internet connection with the phone (reverse tethering)':FBTN 'echo gnirehtet' \
-  --field='Use phone'\''s internet!!Have this computer use the phone'\''s mobile network connection (tethering)':FBTN 'echo tethering' \
-  --field='Browse phone'\''s files!!View the filesystem of the phone in a file manager':FBTN 'echo mtp' \
-  --field='Send files!!Quick-drop files into the phone'\''s Download folder':FBTN 'echo quickdrop' \
+yad "${yadflags[@]}" --form --no-buttons \
+  --field='Show/hide screen!!View and control phone screen with scrcpy':FBTN 'bash -c "echo scrcpy $YAD_PID"' \
+  --field='Share internet to phone!!Share my internet connection with the phone (reverse tethering)':FBTN 'bash -c "echo gnirehtet $YAD_PID"' \
+  --field='Use phone'\''s internet!!Have this computer use the phone'\''s mobile network connection (tethering)':FBTN 'bash -c "echo tethering $YAD_PID"' \
+  --field='Browse phone'\''s files!!View the filesystem of the phone in a file manager':FBTN 'bash -c "echo mtp $YAD_PID"' \
+  --field='Send files!!Quick-drop files into the phone'\''s Download folder':FBTN 'bash -c "echo quickdrop $YAD_PID"' \
   --field='Run when phone detected!!Launch AndroidBuddy when an Android phone is plugged in':FBTN 'bash -c "echo autostart $YAD_PID"' | \
 while read -r input; do
   echo "Received '$input'"
+  
+  if [ -z "$YAD_PID" ];then
+    YAD_PID="$(echo "$input" | awk '{print $2}')"
+  fi
+  input="$(echo "$input" | awk '{print $1}')"
   
   case "$input" in
     scrcpy)
@@ -154,6 +222,7 @@ while read -r input; do
       ;;
     gnirehtet)
         install_gnirehtet
+        killall gnirehtet 2>/dev/null
         gnirehtet run || error "failed to run gnirehtet for reverse tethering"
       ;;
     tethering)
@@ -166,7 +235,7 @@ while read -r input; do
         sudo_popup apt install -y gvfs-backends || error "gvfs-backends is required but it failed to install."
       fi
       adb shell svc usb setFunctions mtp || error "adb command failed"
-      wait_for_reconnect
+      wait_for_reconnect || error "phone disconnected"
       
       #start mtp volume monitor if needed
       pgrep -f /usr/libexec/gvfs-mtp-volume-monitor >/dev/null || /usr/libexec/gvfs-mtp-volume-monitor &
@@ -191,21 +260,28 @@ while read -r input; do
       xdg-open /run/user/1000/gvfs/*/Phone || error "failed to open phone filesystem in file manager"
       ;;
     quickdrop)
-      files="$(yad --dnd --width=400 --text="Drop files here to send them to the Download folder." --text-align=center --button=OK:0 | sed 's+file://++g')"
+      files="$(yad "${yadflags[@]}" --dnd --width=400 --text="Drop files here to send them to the Download folder." --text-align=center --button=OK:0 | sed 's+file://++g')"
       IFS=$'\n'
       lastfile="$(tail -1 <<<"$files")"
       for file in $files ;do
         echo "#$(basename "$file")"
         adb push "$file" /sdcard/Download 1>&2
+        error "failed to transfer '$file'"
         #pause on last file so user can see progress
         [ "$file" == "$lastfile" ] && sleep 2
-      done | yad --text="Transferring files..." --progress --pulsate --auto-close --auto-kill --enable-log --log-expanded --width 400 --button=Cancel:1
+      done | yad "${yadflags[@]}" --text="Transferring files..." --progress --pulsate --auto-close --auto-kill --enable-log --log-expanded --width 400 --button=Cancel:1
+      
+      [ "${PIPESTATUS[0]}" != 0 ] && error
       ;;
-    autostart*)
+    autostart)
       if [ -f ~/.config/autostart/androidbuddy.desktop ];then
         rm -f ~/.config/autostart/androidbuddy.desktop
         ps aux | grep "/bin/bash $(dirname $0)/autostart.sh" | grep -v grep | awk '{print $2}' | xargs kill
+<<<<<<< HEAD
         yad --width=400 --text="Removed the autostart file."$'\n'"From now on, AndroidBuddy will no longer launch when an Android phone is plugged in." --button=OK:0
+=======
+        yad "${yadflags[@]}" --width=400 --text="Removed the autostart file."$'\n'"From now on, AndroidBuddy will no longer launch when an Android phone is plugged in." --button=OK:0
+>>>>>>> 979ba37 (Add logos, menu launcher, gui error handling, adb instructions)
       else
         mkdir -p ~/.config/autostart
         echo "[Desktop Entry]
@@ -218,7 +294,7 @@ Hidden=false
 NoDisplay=false" > ~/.config/autostart/androidbuddy.desktop
         ps aux | grep "/bin/bash $(dirname $0)/autostart.sh" | grep -v grep | awk '{print $2}' | xargs kill
         setsid "$(dirname $0)/autostart.sh" &
-        yad --width=400 --text="Added the autostart file."$'\n'"From now on, AndroidBuddy will launch when an Android phone is plugged in." --button=OK:0
+        yad "${yadflags[@]}" --width=400 --text="Added the autostart file."$'\n'"From now on, AndroidBuddy will launch when an Android phone is plugged in." --button=OK:0
         kill $(echo "$input" | awk '{print $2}') #kill yad and exit
         break
       fi
