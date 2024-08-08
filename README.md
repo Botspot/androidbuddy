@@ -60,8 +60,8 @@ There are no settings or options. This app follows the KISS principle. Change th
 - [scrcpy-gui](https://github.com/Tomotoes/scrcpy-gui) - only deals with controlling the screen, and the project is abandoned
 - [guiscrcpy](https://github.com/srevinsaju/guiscrcpy) - only deals with controlling the screen, and the project is abandoned
 - [scrcpy-plus](https://github.com/Frontesque/scrcpy-plus) - only deals with controlling the screen
-- [droidbuddy](https://gitlab.com/gazlene/droidbuddy) - only major features are file transfer and screen control, but project is abandoned
+- [droidbuddy](https://gitlab.com/gazlene/droidbuddy) - only major features are file transfer, APK installation, and screen control, and the project is abandoned
 
 Thanks for reading!  
 -Botspot  
-PS. I wrote this in 4 hours for my own personal use, and if you want to chat or need help then consider joining [my Discord Server.](https://discord.gg/RXSTvaUvuu)
+PS. It took me 4 hours to make AndroidBuddy for my own personal use because I was tired of using droidbuddy. If you want to chat or need help then consider joining [my Discord Server.](https://discord.gg/RXSTvaUvuu)
