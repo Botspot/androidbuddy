@@ -91,7 +91,7 @@ wait_for_reconnect() {
 
 scrcpy_daemon() {
   if ! command -v scrcpy >/dev/null ;then
-    error "scrcpy not installed! Please use Pi-Apps to install scrcpy. https://github.com/Botspot/pi-apps"
+    error "scrcpy not installed! If you are using an ARM computer, please use Pi-Apps to install scrcpy. https://github.com/Botspot/pi-apps"
   fi
   
   local exitcode
@@ -118,7 +118,7 @@ scrcpy_daemon() {
   done
 }
 
-yadflags=(--center --class=androidbuddy --name=androidbuddy --window-icon=androidbuddy --title="AndroidBuddy")
+yadflags=(--center --class=androidbuddy --name=androidbuddy --window-icon="$(dirname "$0")/logo.png" --title="AndroidBuddy")
 
 if [ ! -f ~/.local/share/applications/androidbuddy.desktop ];then
   if [ -f /usr/share/applications/androidbuddy.desktop ];then
@@ -142,6 +142,39 @@ if [ ! -f ~/.local/share/icons/androidbuddy.png ];then
   update-icon-caches ~/.local/share/icons
 fi
 
+if ! command -v yad >/dev/null ;then
+  sudo_popup apt update
+  sudo_popup apt install -y yad || error "yad is required but it failed to install."
+fi
+
+if ! command -v adb >/dev/null ;then
+  sudo_popup apt update
+  sudo_popup apt install -y adb || error "adb is required but it failed to install."
+fi
+
+localhash="$(cd "$(dirname "$0")" ; git rev-parse HEAD)"
+latesthash="$(git ls-remote https://github.com/Botspot/androidbuddy HEAD | awk '{print $1}')"
+if [ "$localhash" != "$latesthash" ] && [ ! -z "$latesthash" ] && [ ! -z "$localhash" ];then
+  echo "Auto-updating AndroidBuddy for the latest features and improvements..."
+  cd "$(dirname "$0")"
+  git pull | cat #piping through cat makes git noninteractive
+  
+  if [ "${PIPESTATUS[0]}" == 0 ];then
+    cd
+    echo "git pull finished. Reloading script..."
+    set -a #export all variables so the script can see them
+    #run updated script
+    "$0" "$@"
+    exit $?
+  else
+    cd
+    echo "git pull failed. Continuing..."
+  fi
+fi
+
+#exit now if given the 'install' flag
+[ "$1" == install ] && exit 0
+
 read_true() {
   [ "$exitcode" == first ] && return 0
   read "$@"
@@ -149,7 +182,7 @@ read_true() {
 }
 #wait for phone to be plugged in
 exitcode=first
-yad "${yadflags[@]}" --text="Waiting for phone..." --progress --pulsate --width 400 --no-buttons < <(echo '#';sleep infinity) &
+yad "${yadflags[@]}" --text="To continue, connect an Android phone to this computer with a USB cable."$'\n'"Waiting for phone..." --progress --pulsate --width 400 --no-buttons < <(echo '#';sleep infinity) &
 loaderpid=$!
 trap "kill $loaderpid 2>/dev/null" EXIT
 line=''
@@ -187,20 +220,15 @@ while read_true -t 5 line ;do
   fi
 done < <(udevadm monitor --environment | grep --line-buffered '^ID_SERIAL.*Android')
 
-if ! command -v yad >/dev/null ;then
-  sudo_popup apt update
-  sudo_popup apt install -y yad || error "yad is required but it failed to install."
-fi
-
 gnirehtet_installed="$(grep -xFq "package:com.genymobile.gnirehtet" <<<"$installed_apks" && echo true || echo false)"
 
 yad "${yadflags[@]}" --form --no-buttons \
-  --field='Show/hide screen!!View and control phone screen with scrcpy':FBTN 'bash -c "echo scrcpy $YAD_PID"' \
-  --field='Share internet to phone!!Share my internet connection with the phone (reverse tethering)':FBTN 'bash -c "echo gnirehtet $YAD_PID"' \
+  --field=$'Control screen!!View and interact with phone screen using scrcpy.\nCopy and paste should transfer automatically, and phone'\''s audio is forwarded to your computer.':FBTN 'bash -c "echo scrcpy $YAD_PID"' \
+  --field='Share internet to phone!!Share this computer'\''s internet connection with the phone (reverse tethering)':FBTN 'bash -c "echo gnirehtet $YAD_PID"' \
   --field='Use phone'\''s internet!!Have this computer use the phone'\''s mobile network connection (tethering)':FBTN 'bash -c "echo tethering $YAD_PID"' \
   --field='Browse phone'\''s files!!View the filesystem of the phone in a file manager':FBTN 'bash -c "echo mtp $YAD_PID"' \
   --field='Send files!!Quick-drop files into the phone'\''s Download folder':FBTN 'bash -c "echo quickdrop $YAD_PID"' \
-  --field='Run when phone detected!!Launch AndroidBuddy when an Android phone is plugged in':FBTN 'bash -c "echo autostart $YAD_PID"' | \
+  --field='Run when phone found!!Launch AndroidBuddy when an Android phone is plugged in':FBTN 'bash -c "echo autostart $YAD_PID"' | \
 while read -r input; do
   echo "Received '$input'"
   
