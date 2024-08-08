@@ -13,23 +13,24 @@ The dependencies to run are minimal.
 ```
 sudo apt install yad adb
 ```
-To use reverse tethering, a minimal rust compilation toolchain is required in order for AndroidBuddy to compile `gnirehtet`.
-```
-sudo apt install rustc cargo
-```
-To browse files, this package needs to be installed and configured: (On most distros it already is)
-```
-sudo apt install gvfs-backends
-```
-To control the screen, you need Scrcpy, which is not available on the Debian repositories.  
-   If you have an ARM-based machine, just [install Scrcpy with Pi-Apps.](https://pi-apps.io/install-app/install-scrcpy-on-raspberry-pi/)  
-   Otherwise, follow the install instructions that can be found [here.](https://github.com/Genymobile/scrcpy/blob/master/doc/linux.md)  
+- To use reverse tethering, a minimal rust compilation toolchain is required in order for AndroidBuddy to compile `gnirehtet`.
+    ```
+    sudo apt install rustc cargo
+    ```
+- To browse files, this package needs to be installed and configured: (On most distros it already is)
+    ```
+    sudo apt install gvfs-backends
+    ```
+- To control the screen, you need Scrcpy, which is not available on the Debian repositories.  
+  - If you have an ARM-based machine, just [install Scrcpy with Pi-Apps.](https://pi-apps.io/install-app/install-scrcpy-on-raspberry-pi/)  
+  - Otherwise, follow the install instructions that can be found [here.](https://github.com/Genymobile/scrcpy/blob/master/doc/linux.md)  
+- For AndroidBuddy to launch automatically when a phone is detected, your distro needs to be using udev. Most distros do, but if yours does not, you will need to enable that yourself.
 ## Download and run
 ```
 git clone https://github.com/Botspot/androidbuddy
 ./androidbuddy/main.sh
 ```
-In a few days, AndroidBuddy will be added to Pi-Apps, and once that happens, if you have an ARM Linux device, just install it from there.  
+In a few days, AndroidBuddy will be added to Pi-Apps. Once that happens, if you have an ARM Linux device, just install it from there.  
 [![badge](https://github.com/Botspot/pi-apps/blob/master/icons/badge.png?raw=true)](https://github.com/Botspot/pi-apps)  
 AndroidBuddy is intended to be run as a normal user. When it needs escalated permissions, it will try to use passwordless sudo, and if that fails, it will fallback to a password prompt dialog.  
 
