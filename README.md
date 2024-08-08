@@ -3,10 +3,10 @@ Manage your Android phone from a Linux computer.
 File transfer, file browsing and in-place editing, screen control, tethering, reverse tethering, and an autostart feature when a phone is detected.
 
 What do I use AndroidBuddy for?
-- Move big videos to my computer and then delete them from the phone
-- Share my fast ethernet connection with my phone
-- Respond to texts with a full size keyboard
-- Copy and paste links and other text between computer and phone
+- Moving big videos to my computer and then delete them from the phone
+- Sharing my fast ethernet connection with my phone
+- Responding to texts with a full size keyboard
+- Copying and pasting links and other text between computer and phone
 
 This should work on any Debian-based distro regardless of CPU architecture, but it has been tested on ARM64 Raspberry Pi OS.  
 The dependencies to run are minimal.
