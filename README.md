@@ -1,6 +1,6 @@
 # AndroidBuddy ![logo](https://github.com/Botspot/androidbuddy/blob/main/logo.png?raw=true)
 Manage your Android phone from a Linux computer.  
-File transfer, file browsing and in-place editing, screen control, tethering, reverse tethering, and an autostsrt feature when a phone is detected.
+File transfer, file browsing and in-place editing, screen control, tethering, reverse tethering, and an autostart feature when a phone is detected.
 
 What do I use AndroidBuddy for?
 - Move big videos to my computer and then delete them from the phone
