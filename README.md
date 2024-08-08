@@ -56,6 +56,12 @@ AndroidBuddy will automatically keep itself updated using `git pull` when necess
 
 There are no settings or options. This app follows the KISS principle. Change the script to your liking if you need to adjust its behavior. If you make a new useful feature and want to see it added, please [open a Pull Request!](https://github.com/Botspot/androidbuddy/pulls)
 
+## Similar projects and what's wrong with them
+- [scrcpy-gui](https://github.com/Tomotoes/scrcpy-gui) - only deals with controlling the screen, and the project is abandoned
+- [guiscrcpy](https://github.com/srevinsaju/guiscrcpy) - only deals with controlling the screen, and the project is abandoned
+- [scrcpy-plus](https://github.com/Frontesque/scrcpy-plus) - only deals with controlling the screen
+- [droidbuddy](https://gitlab.com/gazlene/droidbuddy) - only major features are file transfer and screen control, but project is abandoned
+
 Thanks for reading!  
 -Botspot  
 PS. I wrote this in 4 hours for my own personal use, and if you want to chat or need help then consider joining [my Discord Server.](https://discord.gg/RXSTvaUvuu)
