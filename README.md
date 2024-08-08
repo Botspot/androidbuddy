@@ -2,6 +2,11 @@
 Manage your Android phone from a Linux computer.  
 File transfer, file browsing and in-place editing, screen control, tethering, reverse tethering, and an autostsrt feature when a phone is detected.
 
+What do I use it for?
+- Move big videos to my computer and then delete them off the phone
+- Share my fast ethernet connection with it
+- Respond to texts with a full size keyboard
+
 This should work on any Debian-based distro regardless of CPU architecture, but it has been tested on ARM64 Raspberry Pi OS.  
 The dependencies to run are minimal.
 ```
