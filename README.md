@@ -16,13 +16,15 @@ To browse files, this package needs to be installed and configured: (On most dis
 sudo apt install gvfs-backends
 ```
 To control the screen, you need Scrcpy, which is not available on the Debian repositories.  
-   If you have an ARM-based machine, just [install Scrcpy with Pi-Apps.]([https://github.com/Botspot/pi-apps](https://pi-apps.io/install-app/install-scrcpy-on-raspberry-pi/))  
+   If you have an ARM-based machine, just [install Scrcpy with Pi-Apps.](https://pi-apps.io/install-app/install-scrcpy-on-raspberry-pi/)  
    Otherwise, follow the install instructions that can be found [here.](https://github.com/Genymobile/scrcpy/blob/master/doc/linux.md)  
 ## Download and run
 ```
 git clone https://github.com/Botspot/androidbuddy
 ./androidbuddy/main.sh
 ```
+In a few days, AndroidBuddy will be added to Pi-Apps, and once that happens, if you have an ARM Linux device, just install it from there.  
+[![badge](https://github.com/Botspot/pi-apps/blob/master/icons/badge.png?raw=true)](https://github.com/Botspot/pi-apps)  
 AndroidBuddy is intended to be run as a normal user. When it needs escalated permissions, it will try to use passwordless sudo, and if that fails, it will fallback to a password prompt dialog.  
 
 ## Usage
@@ -40,6 +42,9 @@ On first run, AndroidBuddy will copy its icon to the user's icons directory and 
 ```
 rm -f ~/.local/share/applications/androidbuddy.desktop ~/.local/share/icons/androidbuddy.png
 ```
+
+## Updates
+AndroidBuddy will automatically keep itself updated using `git pull` when necessary.
 
 ## Configuration
 
