@@ -17,10 +17,12 @@ sudo apt install yad adb
     ```
     sudo apt install rustc cargo
     ```
+    AndroidBuddy will try to install these if you click "Share internet to phone"
 - To browse files, this package needs to be installed and configured: (On most distros it already is)
     ```
     sudo apt install gvfs-backends
     ```
+    AndroidBuddy will try to install this if you click "Browse phone's files"
 - To control the screen, you need Scrcpy, which is not available on the Debian repositories.  
   - If you have an ARM-based machine, just [install Scrcpy with Pi-Apps.](https://pi-apps.io/install-app/install-scrcpy-on-raspberry-pi/)  
   - Otherwise, follow the install instructions that can be found [here.](https://github.com/Genymobile/scrcpy/blob/master/doc/linux.md)  
