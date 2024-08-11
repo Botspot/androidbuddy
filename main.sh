@@ -105,7 +105,10 @@ scrcpy_daemon() {
     if [ $exitcode == 2 ] ;then
       tries=0
       #give the device 2 seconds to reconnect
-      wait_for_reconnect || error "phone disconnected"
+      if ! wait_for_reconnect ;then
+        kill $mypid
+        error "phone disconnected"
+      fi
     elif [ $exitcode == 0 ];then
       #user closed scrcpy
       break
@@ -222,13 +225,8 @@ done < <(udevadm monitor --environment | grep --line-buffered '^ID_SERIAL.*Andro
 
 gnirehtet_installed="$(grep -xFq "package:com.genymobile.gnirehtet" <<<"$installed_apks" && echo true || echo false)"
 
-yad "${yadflags[@]}" --form --no-buttons \
-  --field=$'Control screen!!View and interact with phone screen using scrcpy.\nCopy and paste should transfer automatically, and phone'\''s audio is forwarded to your computer.':FBTN 'bash -c "echo scrcpy $YAD_PID"' \
-  --field='Share internet to phone!!Share this computer'\''s internet connection with the phone (reverse tethering)':FBTN 'bash -c "echo gnirehtet $YAD_PID"' \
-  --field='Use phone'\''s internet!!Have this computer use the phone'\''s mobile network connection (tethering)':FBTN 'bash -c "echo tethering $YAD_PID"' \
-  --field='Browse phone'\''s files!!View the filesystem of the phone in a file manager':FBTN 'bash -c "echo mtp $YAD_PID"' \
-  --field='Send files!!Quick-drop files into the phone'\''s Download folder':FBTN 'bash -c "echo quickdrop $YAD_PID"' \
-  --field='Run when phone found!!Launch AndroidBuddy when an Android phone is plugged in':FBTN 'bash -c "echo autostart $YAD_PID"' | \
+mypid=$$
+
 while read -r input; do
   echo "Received '$input'"
   
@@ -250,8 +248,17 @@ while read -r input; do
       ;;
     gnirehtet)
         install_gnirehtet
+        #make sure it is not running on host or guest already
         killall gnirehtet 2>/dev/null
-        gnirehtet run || error "failed to run gnirehtet for reverse tethering"
+        adb shell am force-stop com.genymobile.gnirehtet
+        gnirehtet run &
+        gnirehtet_pid=$!
+        trap "kill $gnirehtet_pid 2>/dev/null" EXIT
+        #give it 2 seconds to stop running and exit with error
+        sleep 2
+        if ! process_exists $gnirehtet_pid && ! wait $gnirehtet_pid ;then
+          error "failed to run gnirehtet for reverse tethering"
+        fi
       ;;
     tethering)
       adb shell settings put global tether_dun_required 0 || error "adb command failed"
@@ -327,4 +334,10 @@ NoDisplay=false" > ~/.config/autostart/androidbuddy.desktop
       error "unknown input '$input'"
       ;;
   esac
-done
+done < <(yad "${yadflags[@]}" --form --no-buttons \
+  --field=$'Control screen!!View and interact with phone screen using scrcpy.\nCopy and paste should transfer automatically, and phone'\''s audio is forwarded to your computer.':FBTN 'bash -c "echo scrcpy $YAD_PID"' \
+  --field='Share internet to phone!!Share this computer'\''s internet connection with the phone (reverse tethering)':FBTN 'bash -c "echo gnirehtet $YAD_PID"' \
+  --field='Use phone'\''s internet!!Have this computer use the phone'\''s mobile network connection (tethering)':FBTN 'bash -c "echo tethering $YAD_PID"' \
+  --field='Browse phone'\''s files!!View the filesystem of the phone in a file manager':FBTN 'bash -c "echo mtp $YAD_PID"' \
+  --field='Send files!!Quick-drop files into the phone'\''s Download folder':FBTN 'bash -c "echo quickdrop $YAD_PID"' \
+  --field='Run when phone found!!Launch AndroidBuddy when an Android phone is plugged in':FBTN 'bash -c "echo autostart $YAD_PID"')
