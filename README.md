@@ -3,6 +3,7 @@ Manage your Android phone from a Linux computer.
 File transfer, file browsing and in-place editing, screen control, tethering, reverse tethering, and an autostart feature when a phone is detected.
 
 What do I use AndroidBuddy for?
+- Reducing eye strain and improving posture by using the phone on a large screen that is farther away.
 - Moving big videos to my computer to delete them from the phone
 - Sharing my fast ethernet connection with my phone
 - Responding to texts with a full size keyboard
