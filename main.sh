@@ -99,7 +99,7 @@ scrcpy_daemon() {
   while true;do
     scrcpy "$@" &>/dev/null &
     local pid=$!
-    trap "kill $pid" EXIT
+    trap "kill $pid 2>/dev/null" EXIT
     wait $pid
     exitcode=$?
     if [ $exitcode == 2 ] ;then
@@ -175,8 +175,11 @@ if [ "$localhash" != "$latesthash" ] && [ ! -z "$latesthash" ] && [ ! -z "$local
   fi
 fi
 
-#exit now if given the 'install' flag
-[ "$1" == install ] && exit 0
+#install gnirehtet then exit now if given the 'install' flag (for pi-apps integration)
+if [ "$1" == install ];then
+  install_gnirehtet || exit 1
+  exit 0
+fi
 
 read_true() {
   [ "$exitcode" == first ] && return 0
