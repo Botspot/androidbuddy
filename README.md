@@ -50,10 +50,10 @@ AndroidBuddy is intended to be run as a normal user. When it needs escalated per
 1. Connect your favorite Android device to your Linux computer using a USB cable.  
     1.1. Make sure that **USB debugging** is enabled. If AndroidBuddy detects an Android device with USB debugging disabled, instructions will be displayed for how to enable it.  
     1.2. Be sure to use a USB cable that has communication pins. Some cheap cables only supply charging power, and cannot be used.  
-3. Click the buttons.  
-    ![20240808_01h20m17s_grim](https://github.com/user-attachments/assets/48d7f626-bf6b-42d1-81a5-da56bc13e667)
-4. There is no step 3. This should be pretty self-explanatory. Hover the mouse over a button to learn more about it.
-5. [Open an issue](https://github.com/Botspot/androidbuddy/issues/new/choose) if you encounter any problems or have a question.
+2. Click the buttons.  
+    ![20250105_14h24m58s_grim](https://github.com/user-attachments/assets/a465d0eb-0188-491f-b0bb-5d7622a4b7dc)
+3. There is no step 3. This should be pretty self-explanatory. Hover the mouse over a button to learn more about it.
+4. [Open an issue](https://github.com/Botspot/androidbuddy/issues/new/choose) if you encounter any problems or have a question.
 
 ## Uninstall
 On first run, AndroidBuddy will copy its icon to the user's icons directory and create a menu launcher for convenient future usage. To remove these, run this command:
