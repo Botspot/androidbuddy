@@ -311,6 +311,20 @@ while read -r input; do
       
       [ "${PIPESTATUS[0]}" != 0 ] && error
       ;;
+    apkinstall)
+      files="$(yad "${yadflags[@]}" --dnd --width=400 --text="Drop APK files here to install them to the phone." --text-align=center --button=OK:0 | sed 's+file://++g')"
+      IFS=$'\n'
+      lastfile="$(tail -1 <<<"$files")"
+      for file in $files ;do
+        echo "#$(basename "$file")"
+        errors="$(adb install "$file" 2>&1)"
+        error "failed to install '$file' errors below:"$'\n'"$errors"
+        #pause on last file so user can see progress
+        [ "$file" == "$lastfile" ] && sleep 2
+      done | yad "${yadflags[@]}" --text="Transferring files..." --progress --pulsate --auto-close --auto-kill --enable-log --log-expanded --width 400 --button=Cancel:1
+      
+      [ "${PIPESTATUS[0]}" != 0 ] && error
+      ;;
     autostart)
       if [ -f ~/.config/autostart/androidbuddy.desktop ];then
         rm -f ~/.config/autostart/androidbuddy.desktop
@@ -340,7 +354,8 @@ NoDisplay=false" > ~/.config/autostart/androidbuddy.desktop
 done < <(yad "${yadflags[@]}" --form --no-buttons \
   --field=$'Control screen!!View and interact with phone screen using scrcpy.\nCopy and paste should transfer automatically, and phone'\''s audio is forwarded to your computer.':FBTN 'bash -c "echo scrcpy $YAD_PID"' \
   --field='Share internet to phone!!Share this computer'\''s internet connection with the phone (reverse tethering)':FBTN 'bash -c "echo gnirehtet $YAD_PID"' \
-  --field='Use phone'\''s internet!!Have this computer use the phone'\''s mobile network connection (tethering)':FBTN 'bash -c "echo tethering $YAD_PID"' \
+  --field='Use phone'\''s internet!!Have this computer use the phone'\''s mobile network or WiFi connection (tethering)':FBTN 'bash -c "echo tethering $YAD_PID"' \
   --field='Browse phone'\''s files!!View the filesystem of the phone in a file manager':FBTN 'bash -c "echo mtp $YAD_PID"' \
   --field='Send files!!Quick-drop files into the phone'\''s Download folder':FBTN 'bash -c "echo quickdrop $YAD_PID"' \
+  --field='Install APK!!Install an Android app from this computer to the phone':FBTN 'bash -c "echo apkinstall $YAD_PID"' \
   --field='Run when phone found!!Launch AndroidBuddy when an Android phone is plugged in':FBTN 'bash -c "echo autostart $YAD_PID"')
