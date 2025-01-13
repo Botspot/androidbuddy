@@ -303,10 +303,13 @@ while read -r input; do
       lastfile="$(tail -1 <<<"$files")"
       for file in $files ;do
         echo "#$(basename "$file")"
-        adb push "$file" /sdcard/Download 1>&2
-        error "failed to transfer '$file'"
+        errors="$(adb push "$file" /sdcard/Download 2>&1)"
+        [ $? != 0 ] && error "failed to transfer '$file' errors below:"$'\n'"$errors"
         #pause on last file so user can see progress
-        [ "$file" == "$lastfile" ] && sleep 2
+        if [ "$file" == "$lastfile" ];then
+          echo "#Success!"
+          sleep 2
+        fi
       done | yad "${yadflags[@]}" --text="Transferring files..." --progress --pulsate --auto-close --auto-kill --enable-log --log-expanded --width 400 --button=Cancel:1
       
       [ "${PIPESTATUS[0]}" != 0 ] && error
@@ -318,9 +321,12 @@ while read -r input; do
       for file in $files ;do
         echo "#$(basename "$file")"
         errors="$(adb install "$file" 2>&1)"
-        error "failed to install '$file' errors below:"$'\n'"$errors"
+        [ $? != 0 ] && error "failed to install '$file' errors below:"$'\n'"$errors"
         #pause on last file so user can see progress
-        [ "$file" == "$lastfile" ] && sleep 2
+        if [ "$file" == "$lastfile" ];then
+          echo "#Success!"
+          sleep 2
+        fi
       done | yad "${yadflags[@]}" --text="Transferring files..." --progress --pulsate --auto-close --auto-kill --enable-log --log-expanded --width 400 --button=Cancel:1
       
       [ "${PIPESTATUS[0]}" != 0 ] && error
